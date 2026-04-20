@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="../js/questions.js"></script>
+
+<style>
+
+/* RESET */
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+margin:0;
+background: linear-gradient(135deg,#4facfe,#00f2fe);
+transition:.3s;
+user-select:none;
+}
+
+/* DARK MODE */
+body.dark{
+background:#0f172a;
+color:white;
+}
+
+/* HEADER */
+.header{
+background:rgba(0,0,0,0.2);
+backdrop-filter:blur(10px);
+color:white;
+padding:15px 25px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+font-size:26px;
+font-weight:bold;
+}
+
+/* TIMER */
+#timer{
+font-size:22px;
+font-weight:bold;
+}
+
+/* TIMER WARNING */
+.danger{
+color:#ff4d4d;
+animation:pulse 1s infinite;
+}
+
+@keyframes pulse{
+0%{transform:scale(1);}
+50%{transform:scale(1.1);}
+100%{transform:scale(1);}
+}
+
+/* PROGRESS */
+.progressWrap{
+height:6px;
+background:#ddd;
+}
+.progress{
+height:6px;
+width:0%;
+background:#28a745;
+transition:.4s;
+}
+
+/* LAYOUT */
+.container{
+display:flex;
+gap:20px;
+padding:20px;
+height:calc(100vh - 90px);
+}
+
+/* PALETTE */
+.palette{
+display:grid;
+grid-template-columns:repeat(4,55px);
+gap:12px;
+position:sticky;
+top:20px;
+height:max-content;
+}
+
+.qbtn{
+width:55px;
+height:55px;
+border:none;
+border-radius:10px;
+font-weight:bold;
+color:white;
+cursor:pointer;
+transition:.2s;
+}
+
+.qbtn:hover{transform:scale(1.1);}
+
+/* COLORS (UNCHANGED LOGIC) */
+.notAttempted{background:#0d6efd;}
+.attempted{background:#28a745;}
+.current{background:#ffc107;color:black;}
+.flagged{background:#dc3545;}
+
+/* EXAM CARD */
+.exam{
+flex:1;
+background:rgba(255,255,255,0.9);
+backdrop-filter:blur(10px);
+padding:25px;
+border-radius:15px;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+animation:fadeIn .5s ease;
+}
+
+.dark .exam{
+background:#1e293b;
+}
+
+@keyframes fadeIn{
+from{opacity:0;transform:translateY(20px);}
+to{opacity:1;transform:translateY(0);}
+}
+
+/* QUESTION */
+#question{
+margin-bottom:15px;
+}
+
+/* OPTIONS */
+.option{
+background:#f1f8ff;
+padding:14px;
+margin:10px 0;
+border-radius:8px;
+cursor:pointer;
+transition:.3s;
+border:2px solid transparent;
+}
+
+/* HOVER */
+.option:hover{
+transform:translateX(6px);
+background:#dff0ff;
+}
+
+/* SELECTED OPTION (NEW ⭐) */
+.option.selected{
+background:#c8e6ff;
+border:2px solid #007bff;
+}
+
+.dark .option{
+background:#2c2c2c;
+}
+.dark .option.selected{
+background:#374151;
+border:2px solid #4facfe;
+}
+
+/* BUTTONS */
+.btn{
+padding:10px 18px;
+border:none;
+border-radius:8px;
+color:white;
+cursor:pointer;
+font-weight:bold;
+margin-right:8px;
+transition:.3s;
+}
+
+.btn:hover{
+transform:scale(1.05);
+}
+
+.prev{background:#343a40;}
+.next{background:#00a8e8;}
+.flag{background:#ff9800;}
+.submit{background:#28a745;}
+.darkbtn{background:black;}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<div id="title"></div>
+<div>
+<span id="timer">10:00</span>
+<button class="btn darkbtn" onclick="toggleDark()">🌙</button>
+</div>
+</div>
+
+<div class="progressWrap">
+<div class="progress" id="progress"></div>
+</div>
+
+<div class="container">
+
+<div class="palette" id="palette"></div>
+
+<div class="exam">
+
+<h2 id="question"></h2>
+<div id="options"></div><br>
+
+<button class="btn prev" onclick="prev()">Previous</button>
+<button class="btn next" onclick="next()">Next</button>
+<button class="btn flag" onclick="toggleFlag()">Flag</button>
+<button class="btn submit" onclick="submitExam()">Submit</button>
+
+</div>
+</div>
+
+<script>
+
+/* INIT */
+const subject=localStorage.getItem("subject");
+title.innerText=subject+" Examination";
+
+let questions=[...allQuestions[subject]];
+questions=shuffle(questions);
+
+let answers=JSON.parse(localStorage.getItem("autosave_"+subject))
+|| new Array(20).fill(null);
+
+let flags=new Array(20).fill(false);
+
+let index=0;
+
+/* SHUFFLE */
+function shuffle(arr){
+return arr.sort(()=>Math.random()-0.5);
+}
+
+/* PALETTE */
+function loadPalette(){
+
+palette.innerHTML="";
+
+questions.forEach((q,i)=>{
+
+let cls="notAttempted";
+
+if(flags[i]) cls="flagged";
+else if(i===index) cls="current";
+else if(answers[i]) cls="attempted";
+
+palette.innerHTML+=`
+<button class="qbtn ${cls}" onclick="go(${i})">
+${i+1}
+</button>`;
+});
+}
+
+/* PROGRESS */
+function updateProgress(){
+let done=answers.filter(a=>a).length;
+progress.style.width=((done/20)*100)+"%";
+}
+
+/* LOAD */
+function load(){
+
+question.innerText=(index+1)+". "+questions[index].question;
+
+let html="";
+
+questions[index].options.forEach(o=>{
+
+let selected = answers[index]===o ? "selected" : "";
+
+html+=`
+<div class="option ${selected}" onclick="save('${o}')">
+<input type="radio" name="opt"
+${answers[index]===o?"checked":""}>
+ ${o}
+</div>`;
+});
+
+options.innerHTML=html;
+
+loadPalette();
+updateProgress();
+}
+
+/* SAVE */
+function save(v){
+
+answers[index]=v;
+
+localStorage.setItem(
+"autosave_"+subject,
+JSON.stringify(answers)
+);
+
+load();
+}
+
+/* NAV */
+function go(i){index=i;load();}
+function next(){if(index<19){index++;load();}}
+function prev(){if(index>0){index--;load();}}
+
+/* FLAG */
+function toggleFlag(){
+flags[index]=!flags[index];
+loadPalette();
+}
+
+/* DARK */
+function toggleDark(){
+document.body.classList.toggle("dark");
+}
+
+/* SUBMIT */
+function submitExam(){
+
+let score=0;
+
+questions.forEach((q,i)=>{
+if(answers[i]===q.answer) score++;
+});
+
+localStorage.removeItem("autosave_"+subject);
+
+localStorage.setItem("resultData",
+JSON.stringify({
+subject,
+questions,
+answers,
+score
+}));
+
+location.href="result.html";
+}
+
+/* TIMER */
+let time=600;
+
+const t=setInterval(()=>{
+
+let m=Math.floor(time/60);
+let s=time%60;
+
+timer.innerText=`${m}:${s<10?"0"+s:s}`;
+
+/* WARNING */
+if(time <= 60){
+timer.classList.add("danger");
+}
+
+if(time<=0){
+clearInterval(t);
+submitExam();
+}
+
+time--;
+
+},1000);
+
+load();
+
+</script>
+
+</body>
+</html>

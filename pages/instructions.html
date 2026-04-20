@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Instructions</title>
+
+<style>
+
+/* RESET */
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+/* BACKGROUND */
+body{
+height:100vh;
+background: linear-gradient(135deg,#4facfe,#00f2fe);
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+/* MAIN CARD */
+.container{
+width:85%;
+max-width:900px;
+background:rgba(255,255,255,0.2);
+backdrop-filter:blur(15px);
+padding:40px;
+border-radius:20px;
+box-shadow:0 15px 40px rgba(0,0,0,0.2);
+animation:fadeIn .7s ease;
+}
+
+@keyframes fadeIn{
+from{opacity:0;transform:translateY(40px);}
+to{opacity:1;transform:translateY(0);}
+}
+
+/* TITLE */
+h1{
+margin-bottom:20px;
+color:#222;
+}
+
+/* SECTIONS */
+.section{
+margin-bottom:20px;
+}
+
+.section h3{
+margin-bottom:8px;
+color:#0d47a1;
+}
+
+/* LIST */
+ul{
+padding-left:20px;
+}
+
+li{
+margin-bottom:6px;
+}
+
+/* WARNING BOX */
+.warning{
+background:#ffe0e0;
+color:#b71c1c;
+padding:12px;
+border-radius:8px;
+margin-top:15px;
+font-size:14px;
+}
+
+/* CHECKBOX */
+.agree{
+margin-top:20px;
+font-size:15px;
+}
+
+/* BUTTON */
+.btn{
+margin-top:20px;
+padding:12px 25px;
+border:none;
+border-radius:8px;
+background:#007bff;
+color:white;
+font-size:16px;
+cursor:pointer;
+opacity:0.5;
+pointer-events:none;
+transition:.3s;
+}
+
+.btn.active{
+opacity:1;
+pointer-events:auto;
+transform:scale(1.05);
+}
+
+/* COUNTDOWN */
+.countdown{
+margin-top:15px;
+font-size:14px;
+color:#333;
+}
+
+/* BACK */
+.back{
+position:fixed;
+bottom:20px;
+left:20px;
+background:black;
+color:white;
+border:none;
+padding:10px 15px;
+border-radius:8px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1 id="title"></h1>
+
+<!-- GENERAL -->
+<div class="section">
+<h3>📘 General Instructions</h3>
+<ul>
+<li>Total Questions: 20</li>
+<li>Total Time: 10 Minutes</li>
+<li>Each question carries equal marks</li>
+<li>No negative marking</li>
+</ul>
+</div>
+
+<!-- EXAM RULES -->
+<div class="section">
+<h3>⚙️ Exam Rules</h3>
+<ul>
+<li>Questions will appear randomly</li>
+<li>Options are shuffled for fairness</li>
+<li>You can navigate between questions</li>
+<li>Your answers are auto-saved</li>
+</ul>
+</div>
+
+<!-- DO -->
+<div class="section">
+<h3>✅ Do’s</h3>
+<ul>
+<li>Read each question carefully</li>
+<li>Manage your time wisely</li>
+<li>Review answers before submitting</li>
+</ul>
+</div>
+
+<!-- DON'T -->
+<div class="section">
+<h3>❌ Don’ts</h3>
+<ul>
+<li>Do not refresh the page</li>
+<li>Do not switch tabs frequently</li>
+<li>Do not close the browser during exam</li>
+</ul>
+</div>
+
+<!-- WARNING -->
+<div class="warning">
+⚠️ If you refresh or close the page, your exam may be submitted automatically.
+</div>
+
+<!-- AGREE -->
+<div class="agree">
+<input type="checkbox" id="agree"> 
+I agree to follow all instructions
+</div>
+
+<!-- BUTTON -->
+<button class="btn" id="startBtn" onclick="startExam()">
+Start Exam
+</button>
+
+<div class="countdown" id="countdown"></div>
+
+</div>
+
+<button class="back" onclick="history.back()">⬅ Back</button>
+
+<script>
+
+/* SUBJECT TITLE */
+const subject = localStorage.getItem("subject") || "Exam";
+document.getElementById("title").innerText =
+subject + " Examination Instructions";
+
+/* ENABLE BUTTON */
+const checkbox = document.getElementById("agree");
+const btn = document.getElementById("startBtn");
+
+checkbox.addEventListener("change",()=>{
+if(checkbox.checked){
+btn.classList.add("active");
+startCountdown();
+}else{
+btn.classList.remove("active");
+document.getElementById("countdown").innerText="";
+}
+});
+
+/* COUNTDOWN BEFORE START */
+function startCountdown(){
+let time = 3;
+const cd = document.getElementById("countdown");
+
+cd.innerText = "Exam will start in " + time + " sec...";
+
+const interval = setInterval(()=>{
+time--;
+cd.innerText = "Exam will start in " + time + " sec...";
+
+if(time === 0){
+clearInterval(interval);
+cd.innerText = "You can start now 🚀";
+}
+},1000);
+}
+
+/* START EXAM */
+function startExam(){
+if(!checkbox.checked){
+alert("Please accept instructions");
+return;
+}
+window.location.href="exam.html";
+}
+
+</script>
+
+</body>
+</html>

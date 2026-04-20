@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Login</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background: linear-gradient(135deg,#4facfe,#00f2fe);
+overflow:hidden;
+}
+
+/* FLOATING EFFECT */
+body::before{
+content:"";
+position:absolute;
+width:300px;
+height:300px;
+background:rgba(255,255,255,0.3);
+border-radius:50%;
+top:-100px;
+left:-100px;
+filter:blur(80px);
+animation:float 6s infinite alternate;
+}
+
+@keyframes float{
+from{transform:translateY(0);}
+to{transform:translateY(40px);}
+}
+
+/* CARD */
+.container{
+background:rgba(255,255,255,0.25);
+backdrop-filter:blur(12px);
+width:380px;
+padding:30px;
+border-radius:15px;
+box-shadow:0 15px 40px rgba(0,0,0,0.2);
+text-align:center;
+z-index:1;
+}
+
+h2{
+margin-bottom:20px;
+}
+
+/* INPUT */
+.input-box{
+position:relative;
+margin:18px 0;
+}
+
+.input-box input{
+width:100%;
+padding:12px;
+border:1px solid #ccc;
+border-radius:8px;
+background:transparent;
+}
+
+.input-box label{
+position:absolute;
+left:12px;
+top:50%;
+transform:translateY(-50%);
+font-size:14px;
+color:#555;
+transition:.3s;
+}
+
+.input-box input:focus + label,
+.input-box input:not(:placeholder-shown)+label{
+top:-8px;
+font-size:12px;
+background:white;
+padding:0 4px;
+color:#007bff;
+}
+
+.toggle-pass{
+position:absolute;
+right:10px;
+top:50%;
+transform:translateY(-50%);
+cursor:pointer;
+}
+
+/* REMEMBER */
+.remember{
+text-align:left;
+font-size:13px;
+margin-top:5px;
+}
+
+/* BUTTON */
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:8px;
+background:#007bff;
+color:white;
+font-size:16px;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:scale(1.03);
+}
+
+/* ERROR */
+.error{
+color:red;
+margin-top:10px;
+display:none;
+}
+
+/* LINK */
+.link{
+margin-top:15px;
+font-size:14px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Welcome Back 👋</h2>
+
+<div class="input-box">
+<input type="text" id="email" placeholder=" ">
+<label>Email</label>
+</div>
+
+<div class="input-box">
+<input type="password" id="password" placeholder=" ">
+<label>Password</label>
+<span class="toggle-pass" onclick="toggle()">👁️</span>
+</div>
+
+<div class="remember">
+<input type="checkbox" id="remember"> Remember me
+</div>
+
+<div class="error" id="error"></div>
+
+<button onclick="login()">Login</button>
+
+<div class="link" onclick="goRegister()">
+Not registered? Register
+</div>
+
+</div>
+
+<script>
+
+/* AUTO FOCUS */
+document.getElementById("email").focus();
+
+/* LOAD REMEMBERED EMAIL */
+let savedEmail = localStorage.getItem("rememberEmail");
+if(savedEmail){
+document.getElementById("email").value = savedEmail;
+document.getElementById("remember").checked = true;
+}
+
+/* ENTER NAVIGATION */
+document.getElementById("email").addEventListener("keydown",function(e){
+if(e.key==="Enter"){
+e.preventDefault();
+document.getElementById("password").focus();
+}
+});
+
+document.getElementById("password").addEventListener("keydown",function(e){
+if(e.key==="Enter"){
+e.preventDefault();
+login();
+}
+});
+
+/* TOGGLE PASSWORD */
+function toggle(){
+let p=document.getElementById("password");
+p.type = p.type==="password"?"text":"password";
+}
+
+/* LOGIN */
+function login(){
+
+let email=document.getElementById("email").value.trim();
+let pass=document.getElementById("password").value.trim();
+let error=document.getElementById("error");
+
+error.style.display="none";
+
+/* VALIDATION */
+if(!email || !pass){
+return showError("Enter all fields");
+}
+
+/* EMAIL FORMAT */
+let emailRegex=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if(!emailRegex.test(email)){
+return showError("Invalid email format");
+}
+
+/* GET USERS */
+let users = JSON.parse(localStorage.getItem("users")) || [];
+
+/* FIND USER */
+let userIndex = users.findIndex(u => u.email===email && u.password===pass);
+
+if(userIndex === -1){
+return showError("Invalid credentials");
+}
+
+let user = users[userIndex];
+
+/* REMEMBER EMAIL */
+if(document.getElementById("remember").checked){
+localStorage.setItem("rememberEmail", email);
+}else{
+localStorage.removeItem("rememberEmail");
+}
+
+/* ===== UPDATE LOGIN COUNT (NEW 🔥) ===== */
+user.loginCount = (user.loginCount || 0) + 1;
+user.lastLogin = new Date().toLocaleString();
+
+/* SAVE UPDATED USERS */
+users[userIndex] = user;
+localStorage.setItem("users", JSON.stringify(users));
+
+/* ===== LOGIN HISTORY (ADMIN FEATURE 🔥) ===== */
+let loginHistory = JSON.parse(localStorage.getItem("loginHistory")) || [];
+
+loginHistory.push({
+name: user.name,
+email: user.email,
+role: user.role,
+time: new Date().toLocaleString()
+});
+
+localStorage.setItem("loginHistory", JSON.stringify(loginHistory));
+
+/* SESSION */
+localStorage.setItem("username", user.name);
+localStorage.setItem("role", user.role);
+localStorage.setItem("isLoggedIn","true");
+
+/* SUCCESS MESSAGE */
+error.style.color="green";
+error.innerText="Logging in...";
+error.style.display="block";
+
+/* REDIRECT */
+setTimeout(()=>{
+if(user.role==="admin"){
+window.location.href="admin.html";
+}else{
+window.location.href="./pages/congrats.html";
+}
+},800);
+
+}
+
+/* ERROR FIXED */
+function showError(msg){
+let error=document.getElementById("error");
+error.style.color="red";
+error.innerText=msg;
+error.style.display="block";
+}
+
+/* REGISTER */
+function goRegister(){
+window.location.href="./pages/register.html";
+}
+
+</script>
+</body>
+</html>

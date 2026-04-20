@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Student Dashboard</title>
+
+<style>
+/* ===== SAME YOUR STYLE (UNCHANGED) ===== */
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+transition:.3s;
+}
+
+body{
+background: linear-gradient(135deg,#4facfe,#00f2fe);
+min-height:100vh;
+}
+
+body.dark{
+background:#0f172a;
+color:white;
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px 30px;
+color:white;
+font-size:22px;
+font-weight:bold;
+}
+
+.headBtns{
+display:flex;
+gap:10px;
+}
+
+.btn{
+padding:8px 14px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+color:white;
+font-weight:bold;
+}
+
+.themeBtn{background:#111;}
+.logout{background:#ff4d4d;}
+.admin{background:#28a745;}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:25px;
+padding:30px;
+}
+
+.card{
+background:rgba(255,255,255,0.25);
+backdrop-filter:blur(15px);
+padding:25px;
+border-radius:15px;
+box-shadow:0 10px 30px rgba(0,0,0,0.2);
+transition:.4s;
+position:relative;
+}
+
+.card:hover{
+transform:translateY(-10px);
+}
+
+body.dark .card{
+background:#1e293b;
+color:white;
+}
+
+.badge{
+position:absolute;
+top:15px;
+right:15px;
+background:#fff;
+padding:5px 12px;
+border-radius:20px;
+font-size:12px;
+font-weight:bold;
+}
+
+body.dark .badge{
+background:#334155;
+color:white;
+}
+
+.card h2{
+margin-bottom:5px;
+}
+
+.sub{
+font-size:14px;
+margin-bottom:10px;
+}
+
+.stat{
+font-size:13px;
+margin:3px 0;
+}
+
+.progressWrap{
+height:6px;
+background:#ddd;
+border-radius:5px;
+margin-top:10px;
+overflow:hidden;
+}
+
+body.dark .progressWrap{
+background:#444;
+}
+
+.progress{
+height:6px;
+background:#28a745;
+}
+
+.start{
+background:#007bff;
+color:white;
+border:none;
+padding:10px 18px;
+border-radius:8px;
+margin-top:12px;
+cursor:pointer;
+}
+
+.back{
+position:fixed;
+bottom:20px;
+left:20px;
+background:black;
+color:white;
+padding:10px;
+border:none;
+border-radius:8px;
+}
+
+@media(max-width:900px){
+.grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:600px){
+.grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+
+<div id="welcomeText"></div>
+
+<div class="headBtns">
+<button class="btn admin" id="adminBtn" onclick="goAdmin()">Admin</button>
+<button class="btn themeBtn" id="themeBtn" onclick="toggleDark()">🌙</button>
+<button class="btn logout" onclick="logout()">Logout</button>
+</div>
+
+</div>
+
+<div class="grid" id="grid"></div>
+
+<button class="back" onclick="history.back()">⬅ Back</button>
+
+<script>
+
+/* LOGIN CHECK */
+if(localStorage.getItem("isLoggedIn")!=="true"){
+window.location.href="../index.html";
+}
+
+/* USER */
+let name = localStorage.getItem("username");
+let role = localStorage.getItem("role");
+
+/* HIDE ADMIN */
+if(role!=="admin"){
+document.getElementById("adminBtn").style.display="none";
+}
+
+/* GREETING */
+let h=new Date().getHours();
+let g=h<12?"Good Morning":h<18?"Good Afternoon":"Good Evening";
+welcomeText.innerText=`${g}, ${name} 👋`;
+
+/* DARK MODE */
+if(localStorage.getItem("darkMode")==="true"){
+document.body.classList.add("dark");
+document.getElementById("themeBtn").innerText="☀️";
+}
+
+/* SUBJECTS */
+const subjects=["HTML","CSS","JS","PYTHON","DBMS","OS"];
+const level = "Beginner"; // 🔥 IMPORTANT
+
+/* LOAD CARDS */
+subjects.forEach(sub=>{
+
+/* 🔥 FIXED KEY SYSTEM */
+let key = sub + "_" + level;
+
+/* GET DATA */
+let last = Number(localStorage.getItem(key+"_Score")) || 0;
+let best = Number(localStorage.getItem(key+"_Best")) || 0;
+let attempts = Number(localStorage.getItem(key+"_Attempts")) || 0;
+
+let percent = Math.round((best/20)*100);
+
+/* BADGE */
+let badge="Beginner";
+if(best>=15) badge="🔥 Pro";
+else if(best>=10) badge="⭐ Good";
+
+/* UI */
+grid.innerHTML+=`
+<div class="card">
+
+<div class="badge">${badge}</div>
+
+<h2>${sub} Exam</h2>
+<div class="sub">20 Questions • 10 Minutes</div>
+
+<div class="stat">📊 Last: ${last}</div>
+<div class="stat">🏆 Best: ${best}</div>
+<div class="stat">🔁 Attempts: ${attempts}</div>
+
+<div class="progressWrap">
+<div class="progress" style="width:${percent}%"></div>
+</div>
+
+<button class="start" onclick="startExam('${sub}')">
+Start Exam
+</button>
+
+</div>
+`;
+});
+
+/* START */
+function startExam(subject){
+localStorage.setItem("subject",subject);
+localStorage.setItem("level","Beginner"); // 🔥 IMPORTANT
+window.location.href="instructions.html";
+}
+
+/* ADMIN */
+function goAdmin(){
+window.location.href="admin.html";
+}
+
+/* DARK MODE */
+function toggleDark(){
+document.body.classList.toggle("dark");
+let isDark = document.body.classList.contains("dark");
+localStorage.setItem("darkMode", isDark);
+document.getElementById("themeBtn").innerText = isDark ? "☀️" : "🌙";
+}
+
+/* LOGOUT */
+function logout(){
+localStorage.removeItem("username");
+localStorage.removeItem("role");
+localStorage.removeItem("isLoggedIn");
+window.location.href="../index.html";
+}
+
+</script>
+
+</body>
+</html>

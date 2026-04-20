@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Congratulations 🎉</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background: linear-gradient(135deg,#4facfe,#00f2fe);
+overflow:hidden;
+}
+
+/* FLOAT BACKGROUND */
+body::before{
+content:"";
+position:absolute;
+width:400px;
+height:400px;
+background:rgba(255,255,255,0.25);
+border-radius:50%;
+top:-100px;
+left:-100px;
+filter:blur(120px);
+animation:float 6s infinite alternate;
+}
+
+@keyframes float{
+to{transform:translateY(50px);}
+}
+
+/* CARD */
+.card{
+background:rgba(255,255,255,0.25);
+backdrop-filter:blur(12px);
+padding:40px;
+border-radius:20px;
+box-shadow:0 20px 50px rgba(0,0,0,0.25);
+text-align:center;
+z-index:1;
+animation:fade .8s ease;
+}
+
+@keyframes fade{
+from{opacity:0;transform:translateY(40px);}
+to{opacity:1;}
+}
+
+h1{
+font-size:28px;
+margin-bottom:10px;
+}
+
+p{
+margin-bottom:15px;
+}
+
+/* PROGRESS */
+.barWrap{
+width:100%;
+height:8px;
+background:#ddd;
+border-radius:10px;
+overflow:hidden;
+}
+
+.bar{
+height:100%;
+width:0%;
+background:#28a745;
+transition:3s linear;
+}
+
+/* BUTTON */
+button{
+margin-top:20px;
+padding:10px 20px;
+border:none;
+background:#007bff;
+color:white;
+border-radius:8px;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+/* CONFETTI */
+.confetti{
+position:absolute;
+width:8px;
+height:8px;
+top:-10px;
+animation:fall linear infinite;
+}
+
+@keyframes fall{
+to{transform:translateY(100vh) rotate(360deg);}
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<h1 id="msg"></h1>
+<p id="greetText"></p>
+
+<div class="barWrap">
+<div class="bar" id="bar"></div>
+</div>
+
+<button onclick="goNow()">Go to Dashboard ➜</button>
+
+</div>
+
+<script>
+
+/* LOGIN CHECK */
+if(localStorage.getItem("isLoggedIn") !== "true"){
+window.location.href="../index.html";
+}
+
+/* USER */
+let name = localStorage.getItem("username") || "Student";
+
+/* GREETING FIX */
+let hour = new Date().getHours();
+let greeting = "";
+
+if(hour < 12) greeting = "Good Morning ☀️";
+else if(hour < 18) greeting = "Good Afternoon 🌤️";
+else greeting = "Good Evening 🌙";
+
+/* DISPLAY */
+document.getElementById("msg").innerText =
+"🎉 Congratulations, " + name + "!";
+
+document.getElementById("greetText").innerText =
+greeting + " — You did great!";
+
+/* PROGRESS ANIMATION */
+setTimeout(()=>{
+document.getElementById("bar").style.width = "100%";
+},200);
+
+/* REDIRECT FUNCTION */
+function redirect(){
+window.location.href="student_dashboard.html";
+}
+
+/* AUTO REDIRECT */
+setTimeout(redirect,3000);
+
+/* BUTTON */
+function goNow(){
+redirect();
+}
+
+/* CONFETTI EFFECT */
+for(let i=0;i<60;i++){
+let c=document.createElement("div");
+c.className="confetti";
+c.style.left=Math.random()*100+"%";
+c.style.background=`hsl(${Math.random()*360},100%,50%)`;
+c.style.animationDuration=(2+Math.random()*3)+"s";
+document.body.appendChild(c);
+}
+
+</script>
+
+</body>
+</html>

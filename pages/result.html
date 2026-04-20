@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Result</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+background: linear-gradient(135deg,#4facfe,#00f2fe);
+min-height:100vh;
+}
+
+/* HEADER */
+.header{
+padding:20px;
+text-align:center;
+color:white;
+font-size:28px;
+font-weight:bold;
+}
+
+/* RESULT BOX */
+.box{
+width:90%;
+max-width:800px;
+margin:20px auto;
+background:rgba(255,255,255,0.2);
+backdrop-filter:blur(15px);
+padding:25px;
+border-radius:15px;
+text-align:center;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+animation:fade .5s ease;
+}
+
+@keyframes fade{
+from{opacity:0;transform:translateY(20px);}
+to{opacity:1;}
+}
+
+.score{
+font-size:34px;
+font-weight:bold;
+}
+
+.percent{
+font-size:20px;
+margin-top:5px;
+}
+
+/* BADGE */
+.badge{
+margin-top:10px;
+font-weight:bold;
+}
+
+/* PROGRESS */
+.progressWrap{
+height:10px;
+background:#ddd;
+border-radius:10px;
+margin-top:15px;
+overflow:hidden;
+}
+
+.progress{
+height:10px;
+width:0%;
+background:#28a745;
+transition:1s;
+}
+
+/* STATS */
+.stats{
+display:flex;
+justify-content:space-around;
+margin-top:20px;
+flex-wrap:wrap;
+}
+
+/* FILTER */
+.filters{
+text-align:center;
+margin-top:15px;
+}
+
+.filterBtn{
+padding:8px 14px;
+margin:5px;
+border:none;
+border-radius:6px;
+background:#007bff;
+color:white;
+cursor:pointer;
+}
+
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:15px;
+border-radius:10px;
+box-shadow:0 5px 15px rgba(0,0,0,.2);
+}
+
+.correctCard{border-left:6px solid #28a745;}
+.wrongCard{border-left:6px solid #ff5252;}
+
+.correct{color:#28a745;}
+.wrong{color:#ff5252;}
+
+.btn{
+display:block;
+margin:30px auto;
+padding:12px 25px;
+background:#007bff;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+@media(max-width:700px){
+.grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header" id="title"></div>
+
+<div class="box">
+
+<div class="score" id="score"></div>
+<div class="percent" id="percent"></div>
+<div class="badge" id="badge"></div>
+
+<div class="progressWrap">
+<div class="progress" id="progress"></div>
+</div>
+
+<div class="stats">
+<div>✅ Correct: <span id="correct"></span></div>
+<div>❌ Wrong: <span id="wrong"></span></div>
+<div>📊 Attempted: <span id="attempted"></span></div>
+</div>
+
+</div>
+
+<div class="filters">
+<button class="filterBtn" onclick="filter('all')">All</button>
+<button class="filterBtn" onclick="filter('correct')">Correct</button>
+<button class="filterBtn" onclick="filter('wrong')">Wrong</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<button class="btn" onclick="location.href='student_dashboard.html'">
+Go To Dashboard
+</button>
+
+<script>
+
+/* LOAD DATA */
+const data = JSON.parse(localStorage.getItem("resultData"));
+
+if(!data){
+alert("No result found");
+window.location.href="student_dashboard.html";
+}
+
+/* SUBJECT + LEVEL */
+let subject = data.subject;
+let level = localStorage.getItem("level") || "Beginner";
+
+/* SCORE */
+let total = 20;
+let score = Number(data.score) || 0;
+let percent = Math.round((score/total)*100);
+
+/* UI */
+document.getElementById("title").innerText = `${subject} (${level}) Result`;
+document.getElementById("score").innerText = score+"/"+total;
+document.getElementById("percent").innerText = percent+"%";
+
+/* BADGE */
+let badgeText = "Beginner";
+if(percent >= 80) badgeText = "🔥 Pro";
+else if(percent >= 60) badgeText = "⭐ Good";
+
+document.getElementById("badge").innerText = badgeText;
+
+/* PROGRESS */
+setTimeout(()=>{
+document.getElementById("progress").style.width = percent+"%";
+},300);
+
+/* STATS */
+let correct=0, wrong=0, attempted=0;
+
+data.questions.forEach((q,i)=>{
+if(data.answers[i]){
+attempted++;
+if(data.answers[i]===q.answer) correct++;
+else wrong++;
+}
+});
+
+document.getElementById("correct").innerText = correct;
+document.getElementById("wrong").innerText = wrong;
+document.getElementById("attempted").innerText = attempted;
+
+/* ========================= */
+/* 🔥 FIXED STORAGE SYSTEM 🔥 */
+/* ========================= */
+
+/* UNIQUE KEY */
+let key = subject + "_" + level;
+
+/* LAST SCORE */
+localStorage.setItem(key+"_Score", score);
+
+/* ATTEMPTS */
+let attempts = Number(localStorage.getItem(key+"_Attempts")) || 0;
+attempts++;
+localStorage.setItem(key+"_Attempts", attempts);
+
+/* BEST SCORE */
+let best = Number(localStorage.getItem(key+"_Best")) || 0;
+
+if(score > best){
+best = score;
+localStorage.setItem(key+"_Best", best);
+}
+
+/* ========================= */
+/* 🔥 ADMIN HISTORY 🔥 */
+/* ========================= */
+
+let history = JSON.parse(localStorage.getItem("examHistory")) || [];
+
+history.push({
+name: localStorage.getItem("username"),
+subject: subject,
+level: level,
+score: score,
+percentage: percent,
+date: new Date().toLocaleString()
+});
+
+localStorage.setItem("examHistory", JSON.stringify(history));
+
+/* ========================= */
+/* LOAD QUESTIONS */
+/* ========================= */
+
+function load(type="all"){
+document.getElementById("grid").innerHTML="";
+
+data.questions.forEach((q,i)=>{
+
+let ok = data.answers[i]===q.answer;
+
+if(type==="correct" && !ok) return;
+if(type==="wrong" && ok) return;
+
+document.getElementById("grid").innerHTML+=`
+<div class="card ${ok?"correctCard":"wrongCard"}">
+<b>${i+1}. ${q.question}</b><br><br>
+Your: ${data.answers[i]||"Not Attempted"}<br>
+Correct: ${q.answer}<br><br>
+<span class="${ok?"correct":"wrong"}">
+${ok?"✔ Correct":"✖ Wrong"}
+</span>
+</div>`;
+});
+}
+
+function filter(t){
+load(t);
+}
+
+/* INITIAL LOAD */
+load();
+
+</script>
+</body>
+</html>
